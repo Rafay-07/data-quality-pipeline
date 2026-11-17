@@ -39,6 +39,18 @@ def test_full_run_on_sample_file():
     assert "Pass rate" in pipeline.report(stats, quarantine)
 
 
+def test_quarantine_file_keeps_each_rejected_row_and_reason(tmp_path):
+    import csv
+    _, _, quarantine = pipeline.run("sample_orders.csv")
+    out = tmp_path / "quarantine.csv"
+    assert pipeline.write_quarantine(quarantine, str(out)) == 5
+    with open(out, newline="") as f:
+        rows = list(csv.DictReader(f))
+    assert [r["line"] for r in rows] == ["3", "4", "7", "8", "9"]
+    assert rows[0]["order_id"] == "ORD-1002"
+    assert rows[0]["errors"] == "email: bad format 'bob@example'"
+
+
 def test_duplicate_keeps_first_row():
     db, _, _ = pipeline.run("sample_orders.csv")
     name = db.execute("SELECT customer FROM orders WHERE order_id='ORD-1001'").fetchone()[0]

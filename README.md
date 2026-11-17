@@ -28,6 +28,7 @@ Rejected rows:
 - Required fields, regex formats (order id, email), numeric ranges, and dates.
 - Cleaning: trims spaces, fixes name case, lowercases email, strips `$` and commas from prices, and converts three date formats to ISO.
 - Duplicate order ids: the first row wins and the repeat is counted.
+- Rejected rows are saved to `quarantine.csv` with their line number and the reasons they failed, so they can be fixed and run again.
 
 Change the `RULES` dictionary to fit another dataset.
 
@@ -35,7 +36,7 @@ Change the `RULES` dictionary to fit another dataset.
 
 ```bash
 pip install pytest
-python -m pytest -q          # 6 tests
+python -m pytest -q          # 7 tests
 python pipeline.py sample_orders.csv
 ```
 

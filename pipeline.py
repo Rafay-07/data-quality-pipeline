@@ -105,8 +105,27 @@ def report(stats: dict, quarantine: list) -> str:
     return "\n".join(lines)
 
 
+def write_quarantine(quarantine: list, path: str) -> int:
+    """Save the rejected rows to a CSV file so they can be fixed and run again.
+
+    Each row keeps its line number in the source file, the reasons it failed,
+    and its cleaned values. Returns how many rows were written.
+    """
+    fields = ["line", "errors"] + list(RULES)
+    with open(path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        for q in quarantine:
+            writer.writerow({"line": q["line"], "errors": "; ".join(q["errors"]),
+                             **{col: q["row"].get(col, "") for col in RULES}})
+    return len(quarantine)
+
+
 if __name__ == "__main__":
     import sys
     path = sys.argv[1] if len(sys.argv) > 1 else "sample_orders.csv"
     _, s, q = run(path, "orders.db")
     print(report(s, q))
+    # Keep the rejected rows, with their reasons, in a file next to the database.
+    if write_quarantine(q, "quarantine.csv"):
+        print("\nRejected rows saved to quarantine.csv")
